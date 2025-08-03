@@ -14,7 +14,7 @@ app.use(bodyparser.json()); // req.body가 객체로 인식이 됨
 
 app.use("/api", indexRouter);
 
-const mongoURI = process.env.LOCAL_DB_ADDRESS;
+const mongoURI = process.env.PROD_DB_ADDRESS;
 mongoose
   .connect(mongoURI, { useNewUrlParser: true })
   .then(() => console.log("mongoose connected"))
