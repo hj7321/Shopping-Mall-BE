@@ -33,4 +33,16 @@ productController.createProduct = async (req, res) => {
   }
 };
 
+productController.readProducts = async (req, res) => {
+  try {
+    const { page, name } = req.query;
+    const condition = name ? { name: { $regex: name, $options: "i" } } : {};
+    let query = Product.find(condition);
+    const productList = await query.exec();
+    res.status(200).json({ status: "success", data: productList });
+  } catch (error) {
+    res.status(400).json({ status: "failed", message: error.message });
+  }
+};
+
 module.exports = productController;
