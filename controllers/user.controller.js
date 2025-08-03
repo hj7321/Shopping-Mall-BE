@@ -27,16 +27,19 @@ userController.createUser = async (req, res) => {
 userController.loginWithEmail = async (req, res) => {
   try {
     let { email, password } = req.body;
-    const user = await User.findOne({ email }, "-createdAt -updatedAt -__v");
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
-      throw new Error("이메일이 존재하지 않습니다.");
+      throw new Error("이메일 또는 비밀번호가 일치하지 않습니다.");
     }
-    const isPasswordSame = await bcrypt.compare(password, user.password);
-    if (isPasswordSame) {
-      const token = user.generateToken();
-      return res.status(200).json({ status: "success", user, token });
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      throw new Error("이메일 또는 비밀번호가 일치하지 않습니다.");
     }
-    throw new Error("비밀번호가 일치하지 않습니다.");
+
+    const token = user.generateToken();
+    return res
+      .status(200)
+      .json({ status: "success", user: user.toJSON(), token });
   } catch (error) {
     res.status(400).json({ status: "failed", message: error.message });
   }
@@ -46,10 +49,12 @@ userController.getUser = async (req, res) => {
   try {
     const { userId } = req;
     const user = await User.findById(userId);
-    if (user) {
-      res.status(200).json({ status: "success", user });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ status: "failed", message: "User not found" });
     }
-    throw new Error("Invalid Token");
+    res.status(200).json({ status: "success", user });
   } catch (error) {
     res.status(400).json({ status: "failed", message: error.message });
   }
