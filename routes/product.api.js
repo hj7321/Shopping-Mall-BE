@@ -10,5 +10,18 @@ router.post(
   productController.createProduct
 );
 router.get("/", productController.readProducts);
+router.get("/:id", productController.readProductDetail);
+router.put(
+  "/:id",
+  authCountroller.authenticate,
+  authCountroller.checkAdminPermission,
+  productController.updateProduct
+);
+router.delete(
+  "/:id",
+  authCountroller.authenticate,
+  authCountroller.checkAdminPermission,
+  productController.deleteProduct
+);
 
 module.exports = router;
