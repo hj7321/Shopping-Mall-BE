@@ -8,13 +8,25 @@ const orderSchema = Schema(
       type: mongoose.ObjectId,
       ref: User,
     },
-    toShip: {
+    status: {
       type: String,
+      default: "preparing",
+    },
+    totalPrice: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    shipTo: {
+      type: Object,
       required: true,
     },
     contact: {
-      type: String,
+      type: Object,
       required: true,
+    },
+    orderNum: {
+      type: String,
     },
     items: [
       {
