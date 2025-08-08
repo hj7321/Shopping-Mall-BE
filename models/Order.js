@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const User = require("./User");
 const Product = require("./Product");
+const Cart = require("./Cart");
 const Schema = mongoose.Schema;
 const orderSchema = Schema(
   {
@@ -51,6 +52,13 @@ const orderSchema = Schema(
   },
   { timestamps: true }
 );
+
+orderSchema.post("save", async function () {
+  // 카트를 비워주자!
+  const cart = await Cart.findOne({ userId: this.userId });
+  cart.items = [];
+  await cart.save();
+});
 
 const Order = mongoose.model("Order", orderSchema);
 module.exports = Order;
