@@ -66,7 +66,7 @@ cartController.updateCart = async (req, res) => {
       { userId, "items._id": id },
       { $set: { "items.$.qty": value } },
       { new: true }
-    );
+    ).populate("items.productId");
     if (!updatedCart) {
       return res
         .status(404)
@@ -87,7 +87,7 @@ cartController.deleteCart = async (req, res) => {
       { userId },
       { $pull: { items: { _id: id } } },
       { new: true }
-    );
+    ).populate("items.productId");
     if (!updatedCart) {
       return res
         .status(404)
