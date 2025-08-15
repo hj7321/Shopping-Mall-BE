@@ -11,19 +11,22 @@ orderController.createOrder = async (req, res) => {
     // 프론트엔드에서 데이터 보낸거 받아와 userId, totalPrice, shipTo, contact, orderList
     const { userId } = req;
     const { shipTo, contact, totalPrice, orderList } = req.body;
-    // 재고 확인 & 재고 업데이트
+
+    // 1. 주문하려는 모든 상품의 재고를 먼저 확인함
     const insufficientStockItems = await productController.checkItemListStock(
       orderList
     );
-    // 재고가 충분하지 않은 아이템이 있었다 => 에러
+    // 2. 재고가 부족한 상품이 있으면 에러를 반환하고, 재고 감소는 일어나지 않음
     if (insufficientStockItems.length > 0) {
       const errorMessage = insufficientStockItems.reduce(
         (total, item) => (total += item.message),
         ""
       );
-      throw new Error(errorMessage);
+      return res.status(400).json({ status: "failed", message: errorMessage });
     }
-    // order를 만들자!
+    // 3. 모든 상품의 재고가 충분하면, 재고를 감소시킴
+    await productController.decreaseItemListStock(orderList);
+    // 4. 재고 감소가 성공하면, 주문을 생성함
     const newOrder = new Order({
       userId,
       totalPrice,
