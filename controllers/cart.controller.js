@@ -1,4 +1,5 @@
 const Cart = require("../models/Cart");
+const productController = require("./product.controller");
 
 const cartController = {};
 
@@ -98,6 +99,32 @@ cartController.deleteCart = async (req, res) => {
         .json({ status: "failed", message: "상품을 찾을 수 없습니다." });
     }
     res.status(200).json({ status: "success", data: updatedCart.items });
+  } catch (error) {
+    res.status(400).json({ status: "failed", message: error.message });
+  }
+};
+
+cartController.checkCartStock = async (req, res) => {
+  try {
+    const { userId } = req;
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
+    if (!cart || cart.items.length === 0) {
+      return res
+        .status(400)
+        .json({ status: "failed", message: "장바구니가 비어있습니다." });
+    }
+    const insufficientStockItems = await productController.checkItemListStock(
+      cart.items
+    );
+    if (insufficientStockItems.length > 0) {
+      const messages = insufficientStockItems
+        .map((item) => item.message)
+        .join(", ");
+      return res.status(400).json({ status: "failed", message: messages });
+    }
+    res
+      .status(200)
+      .json({ status: "success", message: "모든 상품 재고가 충분합니다." });
   } catch (error) {
     res.status(400).json({ status: "failed", message: error.message });
   }
