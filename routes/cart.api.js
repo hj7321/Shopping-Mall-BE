@@ -8,5 +8,10 @@ router.get("/", authCountroller.authenticate, cartController.getCart);
 router.get("/qty", authCountroller.authenticate, cartController.getCartQty);
 router.put("/", authCountroller.authenticate, cartController.updateCart);
 router.delete("/", authCountroller.authenticate, cartController.deleteCart);
+router.post(
+  "/checkStock",
+  authCountroller.authenticate,
+  cartController.checkCartStock
+);
 
 module.exports = router;
