@@ -154,9 +154,13 @@ productController.deleteProduct = async (req, res) => {
   }
 };
 
+// 재고 확인 로직
 productController.checkStock = async (item) => {
   // 내가 사려는 아이템 재고 정보 들고 오기
   const product = await Product.findById(item.productId);
+  if (!product) {
+    return { isVerify: false, message: "상품을 찾을 수 없습니다." };
+  }
   // 내가 사려는 아이템 qty, 재고 비교
   if (product.stock[item.size] < item.qty) {
     // 재고가 불충분하면 불충분 메시지와 함께 데이터 반환
@@ -165,28 +169,46 @@ productController.checkStock = async (item) => {
       message: `${product.name}의 ${item.size} 재고가 부족합니다.`,
     };
   }
-  // 재고가 충분하면, 재고에서 qty를 빼고 성공한 결과 반환
+  // // 재고가 충분하면, 재고에서 qty를 빼고 성공한 결과 반환
+  // const newStock = { ...product.stock };
+  // newStock[item.size] -= item.qty;
+  // product.stock = newStock;
+  // await product.save();
+  return { isVerify: true };
+};
+
+// 재고 감소 로직
+productController.decreaseStock = async (item) => {
+  const product = await Product.findById(item.productId);
+  if (product.stock[item.size] < item.qty) {
+    throw new Error(`${product.name}의 ${item.size} 재고가 부족합니다.`);
+  }
   const newStock = { ...product.stock };
   newStock[item.size] -= item.qty;
   product.stock = newStock;
   await product.save();
-  return { isVerify: true };
 };
 
+// 모든 상품의 재고를 확인하는 함수
 productController.checkItemListStock = async (itemList) => {
   const insufficientStockItems = []; // 재고가 불충분한 아이템 저장
   // 재고 확인 로직
+  for (const item of itemList) {
+    const stockCheck = await productController.checkStock(item);
+    if (!stockCheck.isVerify) {
+      insufficientStockItems.push({ item, message: stockCheck.message });
+    }
+  }
+  return insufficientStockItems;
+};
+
+// 모든 상품의 재고를 감소시키는 함수
+productController.decreaseItemListStock = async (itemList) => {
   await Promise.all(
     itemList.map(async (item) => {
-      const stockCheck = await productController.checkStock(item);
-      if (!stockCheck.isVerify) {
-        insufficientStockItems.push({ item, message: stockCheck.message });
-      }
-      return stockCheck;
+      await productController.decreaseStock(item);
     })
   );
-
-  return insufficientStockItems;
 };
 
 module.exports = productController;
