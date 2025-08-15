@@ -86,6 +86,7 @@ orderController.readOrderListForAdmin = async (req, res) => {
       .skip((page - 1) * ADMIN_PAGE_SIZE)
       .limit(ADMIN_PAGE_SIZE)
       .populate("items.productId")
+      .populate("userId")
       .lean();
 
     res
