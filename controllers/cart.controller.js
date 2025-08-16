@@ -61,15 +61,22 @@ cartController.getCartQty = async (req, res) => {
 cartController.updateCart = async (req, res) => {
   try {
     const { userId } = req;
-    const { id, value } = req.body;
+    const { id, qty, size } = req.body;
     // id : 장바구니에 있는 특정 아이템의 고유 ID
-    // value : 변경하려는 새로운 수량(qty)값
+    // qty : 변경하려는 새로운 수량(qty)값
+    // size : 변경하려는 새로운 사이즈(size)값
+
+    // 업데이트할 내용
+    const updateFields = {};
+    if (qty !== undefined) updateFields["items.$.qty"] = qty;
+    if (size !== undefined) updateFields["items.$.size"] = size;
 
     const updatedCart = await Cart.findOneAndUpdate(
       { userId, "items._id": id }, // 업데이트할 문서를 찾기 위한 조건
-      { $set: { "items.$.qty": value } }, // 업데이트할 내용
+      { $set: updateFields }, // 업데이트할 내용
       { new: true } // 업데이트 후 변경된 문서의 정보를 반환
     ).populate("items.productId"); // items 배열의 productId 필드에 실제 상품 정보를 채워넣음
+
     if (!updatedCart) {
       return res
         .status(404)
