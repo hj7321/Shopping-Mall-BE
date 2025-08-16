@@ -63,8 +63,12 @@ productController.createProduct = async (req, res) => {
 
 productController.readProducts = async (req, res) => {
   try {
-    const { page, name } = req.query;
-    const condition = name ? { name: { $regex: name, $options: "i" } } : {};
+    const { page, name, category } = req.query;
+    const condition = { isDeleted: false };
+
+    if (name) condition.name = { $regex: new RegExp(name, "i") };
+    if (category) condition.category = category;
+
     let query = Product.find(condition);
     let response = { status: "success" };
 
@@ -73,9 +77,8 @@ productController.readProducts = async (req, res) => {
     const totalPageNum = Math.ceil(totalProductCount / PAGE_SIZE);
     response.totalPageNum = totalPageNum;
 
-    if (page) {
-      query.skip((page - 1) * PAGE_SIZE).limit(PAGE_SIZE);
-    }
+    if (page) query.skip((page - 1) * PAGE_SIZE).limit(PAGE_SIZE);
+
     const productList = await query.exec();
     response.data = productList;
     res.status(200).json(response);
